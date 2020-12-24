@@ -200,16 +200,20 @@ We now have everything we need to redirect execution to our own code, but before
 Let's take a look at the firmware decryption function:
 
 ![Top of decrypt function](img/8_decrypt_a.png)
+
 ...
+
 ![Bottom of decrypt function](img/9_decrypt_b.png)
 
 The actual implementation is not important. What is important is that length check. It checks whether the length is a multiple of 16, and if not, return 1.
 Now let's look at the bootloader mode loop again:
+
 ![Bootloader mode function](img/4_bootloader_mode.png)
 
 Notice something that is conspicuously missing? That's right, there's no check for the return value of the decryption function. This means if we send a
 payload that does not have a length that is a multiple of 16, it will not be decrypted (and you risk writing junk into your flash). We better make sure we
 know how to encrypt the data properly, right? Not quite. Look at the positioning of the incoming buffer and the decryption buffer:
+
 ![Buffer positioning](img/10_buffers.png)
 
 They're right next to each other, with the incoming buffer before the decryption buffer! This means we can take advantage of the buffer overflow from earlier,
