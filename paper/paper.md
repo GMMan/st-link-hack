@@ -502,4 +502,4 @@ References
 - <a name="ref-7"></a>\[7\]: https://www.st.com/resource/en/application_note/cd00264379-usb-dfu-protocol-used-in-the-stm32-bootloader-stmicroelectronics.pdf
 - <a name="ref-8"></a>\[8\]: https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads
 - <a name="ref-9"></a>\[9\]: https://github.com/MelbourneDeveloper/Device.Net
-- <a name="ref-10"></a>\[10\]: https://interrupt.memfault.com/blog/cortex-m-fault-debug
+- <a name="ref-10"></a>\[10\]: Interrupt: How to debug a HardFault on an ARM Cortex-M MCU: https://interrupt.memfault.com/blog/cortex-m-fault-debug
