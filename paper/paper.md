@@ -479,7 +479,7 @@ as a file.
 ### Next steps
 
 To make it possible to debug the ST-Link itself, I patched the firmware to nop out the call to lock the flash, then unlocked the chip (therefore erasing
-the internal flash), and programming back the modified firmware image. I now have a debuggable ST-Link that still retained its original firmware. Even
+the internal flash), and programmed back the modified firmware image. I now have a debuggable ST-Link that still retained its original firmware. Even
 after updating the ST-Link, it was still unlocked because the locking is performed by the bootloader, and the current ST-Link upgrade packages do not
 ship with new bootloaders (probably to avoid it being decoded and flashed on to clone devices).
 
