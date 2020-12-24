@@ -11,7 +11,7 @@ modding it, I purchased a few different debug probes to test out. Two of them fe
 board that is detachable and can be used as an external SWD probe for any board that supports the interface, and the other on a Nucleo-32 board, which can
 only debug the MCU on the same board and cannot connect to an external target. As with most things I get, I was interested in dumping a copy of the firmware
 for safekeeping and study, and this extended not only to the firmware of the main MCU on the Nucleo boards, but also to the embedded ST-Link, in which itself
-runs on a STM32 MCU. Two MCUs on one board, not bad.
+runs on a STM32 MCU. Two MCUs on one board—not bad.
 
 Getting Started: Hardware Connections
 -------------------------------------
@@ -22,10 +22,9 @@ SWD lines. So I went ahead and removed the zero-Ohm resistors from the default b
 
 ![Nucleo-64 with reserved solder bridges set](img/1_nucleo-64_swd_select.jpg)
 
-On the Nucleo-32, there is a 5-pin header in the corner that is for the ST-Link MCU SWD port. You only need to solder the header in to have access to the
-ST-Link's SWD lines. I soldered the header on the same side as the other headers, but in retrospective it would have been better to have soldered them
-to the other side of the board so I could still plug the Nucleo-32 into a breadboard, since the SWD pins are slightly misaligned from the rest of the
-headers.
+On the Nucleo-32, there is a 5-pin header in the corner near the USB port that is for the ST-Link MCU SWD port. You only need to solder the header in to
+have access to the ST-Link's SWD lines. Put the header on the side with the USB connector. The SWD pins are slightly misaligned from the rest of the headers,
+so if you do what I did you won't be able to plug the board into a breadboard.
 
 ![Nucleo-32 with SWD header](img/2_nucleo-32_swd.jpg)
 
@@ -40,9 +39,9 @@ command for OpenOCD:
 openocd.exe -f interface\jlink.cfg -c "adapter speed 1000; transport select swd" -f target\stm32f1x.cfg
 ```
 
-Upon connection, I noticed that readout protection (RDP) was enabled on the chip, which means I could not read out the flash, and at the same time the
-flash controller locks itself up, preventing the ARM core from reading the flash as well, and generally causing everything to stop working until I reset
-power to the board. However, RDP still allows me to read the SRAM, which will be useful later.
+Upon connection, I noticed I could not read the from the flash. This was because readout protection (RDP) was enabled on the chip, which causes the flash
+controller to lock up until the power to the board is reset, preventing reads even by the internal firmware. However, RDP still allows me to read the SRAM,
+which will be useful later.
 
 ```
 > mdb 0x08000000 16
@@ -79,8 +78,8 @@ RWDATA, I started analyzing the bootloader.
 
 ![Bootloader main function](img/3_main.png)
 
-The main function first ensures that RDP is enabled, then checks whether a reset that was not a power-on reset occurred, and goes into bootloader mode if so.
-Otherwise, it checks whether the ST-Link application is installed into flash, and if so, jumps to it. If it's not present, bootloader mode is entered.
+The main function first ensures that RDP is enabled. It then checks whether a reset that was not a power-on reset occurred, and also that the ST-Link
+application is installed. If either of the above are not true, it goes into bootloader mode.
 
 ### Bootloader mode function
 
@@ -91,8 +90,7 @@ internal flash. However, there isn't anything related to USB communications here
 
 ### USB interrupt handlers
 
-There are a couple of interrupt handlers that handle incoming USB packets. The specific code is not important enough to show in a screenshot, but it operates
-as such:
+There are a couple of interrupt handlers that handle incoming USB packets. The code operates as such:
 
 - Copy the packet into a 32-byte buffer
 - If currently idle, copy the packet into a 16-byte command buffer, and check the first byte for command type:
@@ -101,7 +99,7 @@ as such:
   - 0xf5: Return ST-Link mode
 - If in a DFU transfer, pass control directly to the DFU command handler (packet does not contain command)
 
-Note that the copying does not limit the number of bytes copied to the number of bytes available in the buffer.
+Note that the copying does not limit the number of bytes copied to the number of bytes available in the buffer. We'll find that this is a repeating theme.
 
 ### USB DFU handler
 
@@ -165,14 +163,15 @@ struct usb_dfu_op_t {
 - 0x41: erase page
 - 0x51: immediately write to flash
 
-It is important to note that the write address is an address in memory space, not relative to the flash base. This is important.
+Note that the write address is an address in memory space, not relative to the flash base. This is important. The write address you sent is also recorded
+for later.
 
 We now know how to send data to the bootloader, but what good will a buffer overflow do for us? It still doesn't let us write arbitrary memory. Well, I'll tell
 you how we can take advantage of this later.
 
 ### Overwriting the Stack
 
-Now knowing how to send data into a buffer, let's look at how we could possibly write memory arbitrarily.
+With sending data to the device out of the way, let's look at how we could potentially write to arbitrary memory locations.
 
 ![Bootloader mode function](img/4_bootloader_mode.png)
 
@@ -181,7 +180,7 @@ to flash. Let's take a peek at the write to flash function.
 
 ![Write to flash function](img/6_bootloader_write_flash.png)
 
-From the bootloader mode function, you know the destination is whatever you gave when you issued your last command. The function loops over the decrypted data
+From the bootloader mode function, the destination is what you set when you issued your last command. The function loops over the decrypted data
 buffer, and writes 32 bits into flash at a time. Now let's go into the function that writes the flash.
 
 ![Write flash word function](img/7_flash_program.png)
@@ -489,7 +488,7 @@ Conclusion
 
 Through ST's sloppy coding practices and the availablility of reference bootloader, I was able to extract the firmware of a ST-LINK/V2-1 in full. The
 exploits leveraged were buffer overflow, lack of checking for return codes, and lack of input validation. As usual, the way to fix these issues is to
-fully validate any input, and to not make any assumptions and always check what your functions return. You never know who's on the other end trying
+fully validate any input, to not make any assumptions, and to always check what your functions return. You never know who's on the other end trying
 to exfiltrate your data.
 
 References
