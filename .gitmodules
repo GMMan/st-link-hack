@@ -1,0 +1,5 @@
+[submodule "host_app/Device.Net"]
+	path = host_app/Device.Net
+	url = https://github.com/MelbourneDeveloper/Device.Net.git
+[submodule "Device.Net"]
+	url = https://github.com/GMMan/Device.Net.git
