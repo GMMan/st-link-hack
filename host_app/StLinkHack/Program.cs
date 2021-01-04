@@ -52,9 +52,11 @@ namespace StLinkHack
                 {
                     // Get mode
                     var readResult = await device.WriteAndReadAsync(MakeSimpleCommand(0xf5));
-                    ushort result = (ushort)(readResult.Data[0] | (readResult.Data[1] << 8));
+                    ushort mode = (ushort)(readResult.Data[0] | (readResult.Data[1] << 8));
 
-                    if (result < 0x200)
+                    // Mode lower byte: 0 = mode
+                    // Mode upper byte: bootloader version (0 = not in bootloader)
+                    if ((mode & 0xff) != 0)
                     {
                         Console.WriteLine("Rebooting to bootloader");
                         // Go to bootloader mode
