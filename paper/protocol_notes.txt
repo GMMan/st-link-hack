@@ -18,7 +18,7 @@ Extended DFU commands:
 7: boot app
 8: get STM32F1 electronic signature (byte 4 is firmware type)
 9: get device config (0x08003c30), takes block number as length
-10: get hardware version (16 bytes total)
+10: get hardware version (4 uints)
     (MSB)
     4 bits: major
     4 bits: minor
