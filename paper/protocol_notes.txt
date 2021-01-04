@@ -1,0 +1,158 @@
+Bootloader
+==========
+
+Header area (0x08000100)
+- magic number (for reading by firmware app)
+- bootloader version/enabled (?)
+- bootloader mode function address
+
+Bootloader USB commands:
+0xf1: get version (6 bytes, 2 from 0x3ffe)
+0xf3: DFU
+0xf5: get mode (high byte is bootloader version, 0 = app)
+
+Extended DFU commands:
+7: boot app
+8: get STM32F1 electronic signature (byte 4 is from 0x08003c20)
+9: get device config (0x08003c30), takes block number as length
+10: get hardware (bootloader?) version
+
+command other than 0xf3 is rejected if currently receiving data for DFU
+
+Firmware
+========
+
+Normal USB commands:
+0xf1: get version
+    see https://github.com/stlink-org/stlink/blob/104940eca7aff9fc57427a2b6cc5d655818a7bfc/src/common.c#L1509
+0xf2: debug
+0xf3: DFU
+    NAK all but 7 (boot app)
+    Newer version returns 0x0042
+0xf5: get mode
+0xf7: get target voltage
+    returns: factor (uint) and reading (uint)
+0xf8: get board ident
+    returns: integer, (PC14 << 1) | PC13
+0xf9: bootloader
+    0: get is bootloader available
+        returns: 0x0080 = yes, 0x0021 = no
+    1: reboot to bootloader
+0xfa: set MCO
+    0: No clock
+    1: HSI
+    2: HSE
+    3: PLL / 2
+    returns: 0x0080 = ok, 0x0006 = invalid argument
+0xfd: set power enable on 5V regulator
+    0: power off
+    1: power on
+    returns: 0x0080 = ok, 0x0006 = invalid argument
+
+NVRAM (0x08003c00/0x0801f800)
+-----------------------------
+1KiB in size
+
+Device info 
+[0..15]: Transit key, encrypted with static anti-clone key
+[16..31]: padding
+[32]: Device type
+    'A': STM32 Debugger+Audio
+    'B': STM32 Debug+VCP / STM32 Debug+Mass storage+VCP
+    'C': STM32 Debugger+Audio (firmware)
+    'D': STM32 Debug+VCP / STM32 Debug+Mass storage+VCP (firmware)
+    'E': STM32 Debug+Mass storage+VCP
+    'F': STM8/STM32 Debug+2VCP+Bridge / STM8/STM32 Debug+Mass storage+VCP+Bridge
+    'G': STM8 Debug+Mass storage+VCP
+    'J': STM32 Debugger
+    'L': STM32 Debugger (firmware)
+    'M': STM8/STM32 Debugger
+    'O': STM8/STM32 Debugger (firmware)
+    'S': STM8 Debugger
+    'U': STM8 Debugger (firmware)
+    0xff: Undefined
+[33..47]: reserved
+
+Device params (device info + 0x30)
+[0]: USB max current set
+    'P': present
+    0xff: not present
+[1]: USB max current / 2
+[2]: volume name set
+    'V': present
+    0xff: not present
+[3..13]: volume name
+[14]: reserved
+[15]: Mbed board name set
+    'B': present
+    0xff: not present
+[16..18]: Mbed board name
+[19]: reserved
+[20]: DFU option set
+    'F': present
+    0xff: not present
+[21]: DFU option
+    bit field
+    1: DFU no power off
+    2: DFU start target after enum
+[22]: dynamic option set
+    'D': present
+    0xff: not present
+[23]: dynamic option value (only settable for STM32 Debug+VCP and STM8/STM32 Debug+2VCP+Bridge)
+    0xff: default
+    'V': MSC off
+    'M': MSC on
+    'W': MSC always off
+[24]: shortcut option set
+    'L': present
+    0xff: not present
+[25]: shortcut option value
+    1: v3mini
+    2: rpnRule1
+    3: STLINK_V3S
+[26]: MCO output set
+    'O': present
+    0xff: not present
+[27]: MCO output setting
+    lower nybble:
+        0: none
+        1: HSI
+        2: HSE
+        3: PLL
+    upper nybble: divider - 1 (valid divider values 1-5)
+    0xff: default
+[28]: internal action
+    'S': set (1)
+    0xff: unset (2)
+[29..31]: reserved
+[32]: startup pref set
+    'C': present
+    0xff: not present
+[33]: startup pref value
+    0: high
+    1: balanced
+    2: lowpower
+    3: default
+[34]: RPN rule set
+    'R': present
+    0xff: not present
+[35..49]: RPN rule
+
+But only 48 bytes will be used
+
+Firmware version:
+if ST-LINK < V3:
+    last 16 bits of NVRAM, 4 bits version, 6 bits JTAG, 6 bits secondary
+else:
+    last 8 bytes of NVRAM:
+        [0]: version
+        [1]: SWIM version
+        [2]: JTAG version
+        [3]: mass storage/VCP version
+        [4]: bridge interface version
+        [5]: P version
+        [6-7]: blank
+
+Firmware present signature:
+end of flash - 16 bytes
+first 12 bytes of encrypted electronic signature, then magic number 0xa50027d3
