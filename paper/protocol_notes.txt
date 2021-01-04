@@ -145,7 +145,7 @@ Device params (device info + 0x30)
 [34]: RPN rule set
     'R': present
     0xff: not present
-[35..49]: RPN rule
+[35..50]: RPN rule
 
 But only 48 bytes will be used
 
