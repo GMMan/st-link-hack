@@ -7,15 +7,24 @@ Header area (0x08000100)
 - bootloader mode function address
 
 Bootloader USB commands:
-0xf1: get version (6 bytes, 2 from 0x3ffe)
+0xf1: get version
+    ushort: firmware version
+    ushort: VID
+    ushort: PID
 0xf3: DFU
-0xf5: get mode (high byte is bootloader version, 0 = app)
+0xf5: get mode (high byte is bootloader version, 0 = app or very old bootloader)
 
 Extended DFU commands:
 7: boot app
-8: get STM32F1 electronic signature (byte 4 is from 0x08003c20)
+8: get STM32F1 electronic signature (byte 4 is firmware type)
 9: get device config (0x08003c30), takes block number as length
-10: get hardware (bootloader?) version
+10: get hardware version
+    (MSB)
+    4 bits: major
+    4 bits: minor
+    24 bits: flags
+        1: 128K override
+        2: additional 20K
 
 command other than 0xf3 is rejected if currently receiving data for DFU
 
