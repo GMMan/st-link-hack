@@ -4,7 +4,7 @@
 .align 4
 .rept 0x180
 	.word	0x70000000
-	.word	0x20000f81
+	.word	0x2000174D
 .endr
 
 .rept 0x40
@@ -12,27 +12,36 @@
 .endr
 
 main:
-	@ Enable UART clock
-	ldr	r0, =0x4002101c
+	@ Enable UART clock, I/O port B clock, and AFIO clock
+	ldr	r0, =0x40021018	@ RCC_APB2ENR
 	ldr	r1, [r0]
-	ldr	r2, =0x00020000
+	ldr	r2, =0x00004009	@ USART1_EN | IOPB_EN | AFIO_EN
 	orr	r1, r1, r2
 	str	r1, [r0]
 
 	@ Set UART GPIO
-	ldr	r0, =0x40010800	@ GPIO port A registers
-	ldr	r2, [r0]
-	ldr	r3, =0x00000f00
+	@ PB6: SWIM_RST
+	ldr	r0, =0x40010C00	@ GPIO port B registers
+	@ fastest output, AF push/pull
+	ldr	r2, [r0, #0]	@ GPIOx_CRL
+	ldr	r3, =0x0f000000
 	bic	r2, r2, r3
-	ldr	r3, =0xb00
+	ldr	r3, =0x0b000000
 	orr	r2, r2, r3
-	str	r2, [r0]
+	str	r2, [r0, #0]
 
-	@ Set up USART2
-	ldr	r0, =0x40004400	@ USART2 registers
+	@ Enable AFIO remap for USART1
+	ldr	r0, =0x40010000	@ AFIO registers
+	ldr	r2, [r0, #4]	@ AFIO_MAPR
+	ldr	r3, =0x4		@ USART1_REMAP
+	orr	r2, r2, r3
+	str	r2, [r0, #4]
+
+	@ Set up USART1
+	ldr	r0, =0x40013800	@ USART1 registers
 	ldr	r1, =0x0138	@ 115200 baud @ 36MHz
 	str	r1, [r0, #0x08]	@ Set baud rate
-	ldr	r1, =0x2008
+	ldr	r1, =0x2008	@ Enable USART and TX
 	str	r1, [r0, #0x0c]
 
 	@ Send data
@@ -68,5 +77,6 @@ send_byte:
 		
 
 trailer:
+	.short	0xff
 	.short	0xff
 	b	.
