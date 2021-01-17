@@ -1,5 +1,5 @@
-Payload for dumping ST-LINK/V2-1
-================================
+Payload for dumping ST-LINK/V2
+==============================
 
 This is the source for the payload that outputs the internal flash of the
 ST-Link over UART.
