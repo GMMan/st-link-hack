@@ -112,7 +112,7 @@ namespace StLinkHack
             }
             var result = await device.WriteAndReadAsync(MakeSimpleCommand(0xf3, 0x03));
             var resultBytes = result.Data;
-            int timeout = resultBytes[1] | (resultBytes[2] << 8) | (resultBytes[2] << 16);
+            int timeout = resultBytes[1] | (resultBytes[2] << 8) | (resultBytes[3] << 16);
             await Task.Delay(timeout);
             await device.WriteAndReadAsync(MakeSimpleCommand(0xf3, 0x03));
         }

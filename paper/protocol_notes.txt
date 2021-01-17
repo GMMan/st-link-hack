@@ -13,6 +13,17 @@ Bootloader USB commands:
     ushort: PID
 0xf3: DFU
 0xf5: get mode (high byte is bootloader version, 0 = app or very old bootloader)
+0xfb: get version extended
+    byte: version
+    byte: SWIM version
+    byte: JTAG version
+    byte: mass storage/VCP version
+    byte: bridge interface version
+    byte: P version
+    byte: reserved
+    byte: reserved
+    ushort: VID
+    ushort: PID
 
 Extended DFU commands:
 7: boot app
@@ -53,6 +64,8 @@ Normal USB commands:
     2: HSE
     3: PLL / 2
     returns: 0x0080 = ok, 0x0006 = invalid argument
+0xfb: get version extended
+    as above
 0xfd: set power enable on 5V regulator
     0: power off
     1: power on
