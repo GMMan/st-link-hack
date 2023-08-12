@@ -77,10 +77,11 @@ the firmware is laid out in flash. The firmware is laid out as such:
 The bootloader handles the DFU command set for updating ST-Link over USB, and
 also boots the application. Additionally, the readout protection is enabled
 here. The bootloader does not ship with any ST-Link upgrades, so to obtain it
-you must dump a copy from an existing ST-Link. At `0x100` from the beginning of
-the bootloader is a tag that identifies it as a valid bootloader, and includes
-three fields: the magic value `0xa7a53c15`, the hardware version number, and
-a pointer to the entry point for rebooting to bootloader.
+you must dump a copy from an existing ST-Link. For ST-Link/V2-1 and later, at
+`0x100` from the beginning of the bootloader is a tag that identifies it as a
+valid bootloader, and includes three fields: the magic value `0x47a53c15`, the
+hardware version number, and a pointer to the entry point for rebooting to
+bootloader.
 
 ### Configuration area
 
